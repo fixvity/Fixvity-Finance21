@@ -5,8 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Debit Card Payoff Calculator</title>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 <style>
 :root{
   --bg:#f5f7fb;
@@ -28,23 +26,15 @@ body{
 h1{text-align:center;color:var(--primary);margin:22px 0}
 .container{max-width:1200px;margin:auto;padding:16px}
 .grid{display:grid;grid-template-columns:380px 1fr;gap:28px}
-
 .card{
   background:var(--card);
   border-radius:var(--radius);
   box-shadow:var(--shadow);
   padding:24px;
 }
-
 .section{margin-bottom:22px}
 .section h3{margin-bottom:12px;color:var(--primary)}
-
-label{
-  font-size:12px;
-  color:var(--muted);
-  display:block;
-  margin-bottom:4px
-}
+label{font-size:12px;color:var(--muted);display:block;margin-bottom:4px}
 input,select{
   width:100%;
   padding:11px;
@@ -53,13 +43,9 @@ input,select{
   font-size:14px;
   margin-bottom:10px
 }
-
 button{
-  padding:14px;
-  border:none;
-  border-radius:14px;
-  font-weight:600;
-  cursor:pointer
+  padding:14px;border:none;border-radius:14px;
+  font-weight:600;cursor:pointer
 }
 .primary{background:var(--primary);color:#fff}
 .secondary{background:#eef2ff;margin-top:10px}
@@ -67,40 +53,24 @@ button{
 .results{
   display:grid;
   grid-template-columns:repeat(4,1fr);
-  gap:14px;
-  margin-bottom:18px
+  gap:14px;margin-bottom:18px
 }
 .result{
-  background:#f8fafc;
-  border-radius:14px;
-  padding:14px;
-  text-align:center
+  background:#f8fafc;border-radius:14px;
+  padding:14px;text-align:center
 }
 .result b{display:block;font-size:18px}
 .result small{font-size:12px;color:var(--muted)}
 
-.chart-box{height:280px;margin-bottom:18px}
-
 .table-wrap{
   border:1px solid var(--border);
-  border-radius:14px;
-  overflow:hidden
+  border-radius:14px;overflow:hidden
 }
 .table-body{max-height:360px;overflow:auto}
-
-table{
-  width:100%;
-  border-collapse:collapse;
-  font-size:13px
-}
-thead{
-  background:#f1f5f9;
-  position:sticky;
-  top:0
-}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead{background:#f1f5f9;position:sticky;top:0}
 th,td{
-  padding:8px;
-  border-bottom:1px solid var(--border);
+  padding:8px;border-bottom:1px solid var(--border);
   text-align:right
 }
 th:first-child,td:first-child{text-align:center}
@@ -138,6 +108,7 @@ th:first-child,td:first-child{text-align:center}
 
   <div class="section">
     <h3>Monthly Cash Flow</h3>
+
     <label>Monthly Income</label>
     <input id="income" value="2500">
 
@@ -160,13 +131,9 @@ th:first-child,td:first-child{text-align:center}
 
   <div class="results">
     <div class="result"><b id="months">–</b><small>Months to Payoff</small></div>
-    <div class="result"><b id="total">–</b><small>Total Paid</small></div>
+    <div class="result"><b id="totalPaid">–</b><small>Total Paid</small></div>
     <div class="result"><b id="surplus">–</b><small>Monthly Surplus</small></div>
     <div class="result"><b id="date">–</b><small>Payoff Date</small></div>
-  </div>
-
-  <div class="chart-box">
-    <canvas id="chart"></canvas>
   </div>
 
   <h3>Payoff Schedule</h3>
@@ -191,8 +158,6 @@ th:first-child,td:first-child{text-align:center}
 </div>
 
 <script>
-let chart;
-
 function fmt(n){
   const c=document.getElementById("currency").value;
   return new Intl.NumberFormat("en-US",{style:"currency",currency:c}).format(n);
@@ -200,70 +165,46 @@ function fmt(n){
 
 function calculate(){
   let bal=+balance.value;
-  let income=+income.value;
-  let expenses=+expenses.value;
-  let extra=+extra.value;
-  let fee=+fee.value;
+  const income=+income.value;
+  const expenses=+expenses.value;
+  const extra=+extra.value;
+  const fee=+fee.value;
 
-  let monthlyPay=Math.max(income-expenses,0)+extra;
-  if(monthlyPay<=0){
-    alert("No surplus available to pay off balance.");
+  const monthlySurplus=(income-expenses)+extra;
+
+  if(monthlySurplus<=0){
+    alert("Monthly surplus must be greater than 0 to pay off debt.");
     return;
   }
 
-  let rows="",labels=[],data=[];
-  let totalPaid=0,month=0;
-  let now=new Date();
+  let rows="",month=0,total=0;
+  const today=new Date();
 
   while(bal>0 && month<600){
     month++;
+    const payment=Math.min(monthlySurplus,bal);
+    bal-=payment;
     bal+=fee;
-    let pay=Math.min(monthlyPay,bal);
-    bal-=pay;
-    totalPaid+=pay;
+    total+=payment+fee;
 
-    labels.push("M"+month);
-    data.push(Math.max(bal,0));
-
-    rows+=`<tr>
-      <td>${month}</td>
-      <td>${fmt(pay)}</td>
-      <td>${fmt(fee)}</td>
-      <td>${fmt(Math.max(bal,0))}</td>
-    </tr>`;
+    rows+=`
+      <tr>
+        <td>${month}</td>
+        <td>${fmt(payment)}</td>
+        <td>${fmt(fee)}</td>
+        <td>${fmt(Math.max(bal,0))}</td>
+      </tr>`;
   }
 
-  let payoffDate=new Date(now.setMonth(now.getMonth()+month));
+  const payoff=new Date(today.setMonth(today.getMonth()+month));
 
   months.textContent=month;
-  total.textContent=fmt(totalPaid);
-  surplus.textContent=fmt(monthlyPay);
-  date.textContent=payoffDate.toLocaleDateString(undefined,{year:"numeric",month:"long"});
+  totalPaid.textContent=fmt(total);
+  surplus.textContent=fmt(monthlySurplus);
+  date.textContent=payoff.toLocaleDateString(undefined,{year:"numeric",month:"short"});
 
   table.innerHTML=rows;
-
-  chart?.destroy();
-  chart=new Chart(document.getElementById("chart"),{
-    type:"line",
-    data:{
-      labels,
-      datasets:[{
-        label:"Remaining Balance",
-        data,
-        borderColor:"#2563eb",
-        backgroundColor:"rgba(37,99,235,.15)",
-        fill:true,
-        tension:.35
-      }]
-    },
-    options:{
-      maintainAspectRatio:false,
-      plugins:{legend:{display:false}}
-    }
-  });
 }
-
-calculate();
 </script>
 </body>
 </html>
