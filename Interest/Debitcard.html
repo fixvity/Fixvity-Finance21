@@ -8,10 +8,8 @@
 <style>
 :root{
   --bg:#f5f7fb;
-  --card:#ffffff;
+  --card:#fff;
   --primary:#2563eb;
-  --danger:#ef4444;
-  --success:#16a34a;
   --text:#0f172a;
   --muted:#64748b;
   --border:#e5e7eb;
@@ -20,97 +18,46 @@
 }
 *{box-sizing:border-box}
 body{
-  margin:0;
-  font-family:Inter,system-ui,Arial;
-  background:var(--bg);
-  color:var(--text);
+  margin:0;font-family:Inter,system-ui,Arial;
+  background:var(--bg);color:var(--text)
 }
 h1{text-align:center;color:var(--primary);margin:22px 0}
 .container{max-width:1200px;margin:auto;padding:16px}
 .grid{display:grid;grid-template-columns:380px 1fr;gap:28px}
-.card{
-  background:var(--card);
-  border-radius:var(--radius);
-  box-shadow:var(--shadow);
-  padding:24px;
-}
+.card{background:var(--card);border-radius:var(--radius);
+  box-shadow:var(--shadow);padding:24px}
 .section{margin-bottom:22px}
-.section h3{margin-bottom:12px;color:var(--primary)}
 label{font-size:12px;color:var(--muted);display:block;margin-bottom:4px}
-input,select{
-  width:100%;
-  padding:11px;
-  border-radius:12px;
-  border:1px solid var(--border);
-  font-size:14px;
-  margin-bottom:10px
-}
-button{
-  padding:14px;
-  border:none;
-  border-radius:14px;
-  font-weight:600;
-  cursor:pointer
-}
+input,select{width:100%;padding:11px;border-radius:12px;
+  border:1px solid var(--border);margin-bottom:10px}
+button{padding:14px;border-radius:14px;border:none;font-weight:600;cursor:pointer}
 .primary{background:var(--primary);color:#fff}
 .secondary{background:#eef2ff}
-.dark{background:#111827;color:#fff}
 
-.results{
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:14px;
-  margin-bottom:18px
-}
-.result{
-  background:#f8fafc;
-  border-radius:14px;
-  padding:14px;
-  text-align:center
-}
-.result b{display:block;font-size:18px}
-.result small{font-size:12px;color:var(--muted)}
+.results{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+.result{background:#f8fafc;border-radius:14px;padding:14px;text-align:center}
+.result b{font-size:18px;display:block}
 
-.progress-wrap{
-  margin:14px 0
+.progress{
+  height:12px;border-radius:999px;background:#e5e7eb;overflow:hidden;margin:16px 0
 }
-.progress-bar{
-  height:14px;
-  background:#e5e7eb;
-  border-radius:999px;
-  overflow:hidden
-}
-.progress-fill{
-  height:100%;
-  width:0%;
-  background:linear-gradient(90deg,var(--primary),var(--success));
-  transition:.6s
+.progress span{
+  display:block;height:100%;background:linear-gradient(90deg,#2563eb,#22c55e);
+  width:0%
 }
 
 .warning{
-  background:#fff7ed;
-  color:#b45309;
-  padding:10px;
-  border-radius:10px;
-  font-size:13px;
-  margin-bottom:12px;
-  display:none
+  background:#fff7ed;color:#c2410c;
+  padding:12px;border-radius:12px;margin-bottom:14px;display:none
 }
 
-.table-wrap{
-  border:1px solid var(--border);
-  border-radius:14px;
-  overflow:hidden
-}
-.table-body{max-height:360px;overflow:auto}
 table{width:100%;border-collapse:collapse;font-size:13px}
-thead{background:#f1f5f9;position:sticky;top:0}
 th,td{padding:8px;border-bottom:1px solid var(--border);text-align:right}
 th:first-child,td:first-child{text-align:center}
 
-@media(max-width:900px){
-  .grid{grid-template-columns:1fr}
-  .results{grid-template-columns:repeat(2,1fr)}
+@media print{
+  .left,button,.progress,.warning{display:none}
+  body{background:#fff}
 }
 </style>
 </head>
@@ -122,26 +69,13 @@ th:first-child,td:first-child{text-align:center}
 <div class="grid">
 
 <!-- LEFT -->
-<div class="card">
-
+<div class="card left">
   <div class="section">
-    <h3>Currency</h3>
-    <select id="currency">
-      <option value="USD">USD ($)</option>
-      <option value="EUR">EUR (€)</option>
-      <option value="GBP">GBP (£)</option>
-      <option value="INR">INR (₹)</option>
-    </select>
-  </div>
-
-  <div class="section">
-    <h3>Debit Balance</h3>
     <label>Overdraft / Negative Balance</label>
     <input id="balance" value="1500">
   </div>
 
   <div class="section">
-    <h3>Cash Flow</h3>
     <label>Monthly Income</label>
     <input id="income" value="2500">
     <label>Monthly Expenses</label>
@@ -153,117 +87,86 @@ th:first-child,td:first-child{text-align:center}
   </div>
 
   <div class="section">
-    <h3>Payoff Frequency</h3>
-    <select id="mode">
+    <label>Payoff Frequency</label>
+    <select id="freq">
       <option value="monthly">Monthly</option>
       <option value="biweekly">Bi-Weekly</option>
       <option value="weekly">Weekly</option>
     </select>
   </div>
 
-  <button class="primary" onclick="calculate()">Calculate Payoff</button>
+  <button class="primary" onclick="calc()">Calculate Payoff</button>
   <button class="secondary" onclick="location.reload()">Reset</button>
 </div>
 
 <!-- RIGHT -->
 <div class="card">
-
-  <div class="warning" id="warn">
-    ⚠️ Fees are higher than your payments. Balance will not reduce.
-  </div>
+  <div class="warning" id="warn">⚠️ Fees are higher than payments — payoff impossible.</div>
 
   <div class="results">
-    <div class="result"><b id="months">–</b><small>Months to Payoff</small></div>
-    <div class="result"><b id="total">–</b><small>Total Paid</small></div>
-    <div class="result"><b id="surplus">–</b><small>Monthly Surplus</small></div>
-    <div class="result"><b id="date">–</b><small>Payoff Date</small></div>
+    <div class="result"><b id="months">–</b>Months</div>
+    <div class="result"><b id="paid">–</b>Total Paid</div>
+    <div class="result"><b id="surplus">–</b>Surplus</div>
+    <div class="result"><b id="date">–</b>Payoff Date</div>
   </div>
 
-  <div class="progress-wrap">
-    <div class="progress-bar">
-      <div class="progress-fill" id="progress"></div>
-    </div>
-  </div>
+  <div class="progress"><span id="bar"></span></div>
 
-  <h3>Payoff Schedule</h3>
-  <div class="table-wrap">
-    <div class="table-body">
-      <table>
-        <thead>
-          <tr>
-            <th>Month</th>
-            <th>Payment</th>
-            <th>Fee</th>
-            <th>Balance</th>
-          </tr>
-        </thead>
-        <tbody id="table"></tbody>
-      </table>
-    </div>
-  </div>
+  <table>
+    <thead>
+      <tr><th>Period</th><th>Payment</th><th>Fee</th><th>Balance</th></tr>
+    </thead>
+    <tbody id="rows"></tbody>
+  </table>
 
-  <br>
-  <button class="dark" onclick="window.print()">🖨 Print / Export PDF</button>
+  <button onclick="window.print()">🖨 Print / Export PDF</button>
 </div>
 
 </div>
 </div>
 
 <script>
-function fmt(n){
-  const c=currency.value;
-  return new Intl.NumberFormat("en-US",{style:"currency",currency:c}).format(n);
-}
+function fmt(n){return "$"+n.toFixed(2)}
 
-function calculate(){
-  let bal=+balance.value;
-  let incomeM=+income.value;
-  let expensesM=+expenses.value;
-  let extraM=+extra.value;
-  let feeM=+fee.value;
-  let modeVal=mode.value;
+function calc(){
+  const bal0=+balance.value;
+  let bal=bal0;
+  const income=+income.value;
+  const expenses=+expenses.value;
+  const extra=+extra.value;
+  const fee=+fee.value;
+  const freq=freqEl.value;
 
-  let surplus=incomeM-expensesM+extraM;
+  let monthly=(income-expenses)+extra;
+  if(freq==="weekly") monthly/=4.333;
+  if(freq==="biweekly") monthly/=2;
 
-  if(modeVal==="weekly") surplus*=4.333;
-  if(modeVal==="biweekly") surplus*=2.167;
+  if(monthly<=fee){
+    warn.style.display="block";return;
+  } else warn.style.display="none";
 
-  warn.style.display="none";
-  if(surplus<=feeM){
-    warn.style.display="block";
-    return;
+  let rows="",p=0,total=0;
+  while(bal>0 && p<600){
+    p++;
+    bal+=fee;
+    const pay=Math.min(monthly,bal);
+    bal-=pay;
+    total+=pay;
+    rows+=`<tr><td>${p}</td><td>${fmt(pay)}</td><td>${fmt(fee)}</td><td>${fmt(Math.max(0,bal))}</td></tr>`;
   }
 
-  let rows="",month=0,totalPaid=0,startBal=bal;
+  months.textContent=p;
+  paid.textContent=fmt(total);
+  surplus.textContent=fmt(monthly-fee);
+  bar.style.width="100%";
+  rowsEl.innerHTML=rows;
 
-  while(bal>0 && month<600){
-    month++;
-    let payment=Math.min(surplus,bal+feeM);
-    bal=bal+feeM-payment;
-    bal=Math.max(0,bal);
-    totalPaid+=payment;
-
-    rows+=`<tr>
-      <td>${month}</td>
-      <td>${fmt(payment)}</td>
-      <td>${fmt(feeM)}</td>
-      <td>${fmt(bal)}</td>
-    </tr>`;
-  }
-
-  months.textContent=month;
-  total.textContent=fmt(totalPaid);
-  surplus.textContent=fmt(surplus-feeM);
-
-  let d=new Date();
-  d.setMonth(d.getMonth()+month);
+  const d=new Date();
+  d.setMonth(d.getMonth()+p);
   date.textContent=d.toLocaleDateString();
-
-  table.innerHTML=rows;
-  progress.style.width=((1-bal/startBal)*100).toFixed(1)+"%";
 }
 
-calculate();
+const freqEl=freq,rowsEl=rows;
 </script>
 </body>
 </html>
