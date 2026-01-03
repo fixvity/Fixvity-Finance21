@@ -6,7 +6,6 @@
 <title>Debit Card Payoff Calculator</title>
 
 <style>
-/* === SAME CSS (unchanged for safety) === */
 :root{
   --bg:#f5f7fb;
   --card:#ffffff;
@@ -167,11 +166,11 @@ th:first-child,td:first-child{text-align:center}
 <div class="card">
 
   <div class="warning" id="warn">
-    ⚠️ Fees are higher than your payments. Balance will not reduce.
+    ⚠️ Your fees are greater than your payments. Balance will never reduce.
   </div>
 
   <div class="results">
-    <div class="result"><b id="months">–</b><small>Payoff Cycles</small></div>
+    <div class="result"><b id="cycles">–</b><small>Payoff Cycles</small></div>
     <div class="result"><b id="total">–</b><small>Total Paid</small></div>
     <div class="result"><b id="surplus">–</b><small id="surplusLabel">Surplus</small></div>
     <div class="result"><b id="date">–</b><small>Payoff Date</small></div>
@@ -215,50 +214,49 @@ function fmt(n){
 function calculate(){
   let bal = +balance.value;
   let startBal = bal;
-  let incomeM = +income.value;
-  let expensesM = +expenses.value;
-  let extraM = +extra.value;
-  let feeM = +fee.value;
-  let modeVal = mode.value;
+  let income = +income.value;
+  let expenses = +expenses.value;
+  let extra = +extra.value;
+  let monthlyFee = +fee.value;
+  let freq = mode.value;
 
-  let cyclesPerMonth = modeVal==="weekly" ? 4.333 : modeVal==="biweekly" ? 2.167 : 1;
-  let payment = (incomeM - expensesM + extraM) / cyclesPerMonth;
-  let fee = feeM / cyclesPerMonth;
+  let cyclesPerMonth = freq==="weekly" ? 4.333 : freq==="biweekly" ? 2 : 1;
+  let paymentPerCycle = (income - expenses + extra) / cyclesPerMonth;
+  let feePerCycle = monthlyFee / cyclesPerMonth;
 
   surplusLabel.textContent =
-    modeVal==="weekly" ? "Weekly Surplus" :
-    modeVal==="biweekly" ? "Bi-Weekly Surplus" : "Monthly Surplus";
+    freq==="weekly" ? "Weekly Surplus" :
+    freq==="biweekly" ? "Bi-Weekly Surplus" : "Monthly Surplus";
 
-  warn.style.display = payment <= fee ? "block" : "none";
-  if(payment <= fee) return;
+  warn.style.display = paymentPerCycle <= feePerCycle ? "block" : "none";
+  if(paymentPerCycle <= feePerCycle) return;
 
   let rows="", cycle=0, totalPaid=0;
 
   while(bal>0 && cycle<600){
     cycle++;
-    let pay = Math.min(payment, bal + fee);
-    bal = Math.max(0, bal + fee - pay);
-    totalPaid += pay;
-
-    progress.style.width = ((1 - bal/startBal) * 100).toFixed(1) + "%";
+    let payment = Math.min(paymentPerCycle, bal + feePerCycle);
+    bal = Math.max(0, bal + feePerCycle - payment);
+    totalPaid += payment;
 
     rows += `<tr>
       <td>${cycle}</td>
-      <td>${fmt(pay)}</td>
-      <td>${fmt(fee)}</td>
+      <td>${fmt(payment)}</td>
+      <td>${fmt(feePerCycle)}</td>
       <td>${fmt(bal)}</td>
     </tr>`;
   }
 
-  months.textContent = cycle;
+  cycles.textContent = cycle;
   total.textContent = fmt(totalPaid);
-  surplus.textContent = fmt(payment - fee);
+  surplus.textContent = fmt(paymentPerCycle - feePerCycle);
 
-  let daysPerCycle = modeVal==="weekly" ? 7 : modeVal==="biweekly" ? 14 : 30;
+  let days = freq==="weekly" ? 7 : freq==="biweekly" ? 14 : 30;
   let d = new Date();
-  d.setDate(d.getDate() + cycle * daysPerCycle);
+  d.setDate(d.getDate() + cycle * days);
   date.textContent = d.toLocaleDateString();
 
+  progress.style.width = ((1 - bal/startBal) * 100).toFixed(1) + "%";
   table.innerHTML = rows;
 }
 
